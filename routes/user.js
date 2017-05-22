@@ -6,8 +6,11 @@ function checkUser(req, res, next) {
     console.log(`check.user ${req.user}`)
     if (req.user)
         next()
-    else 
+    else {
+        req.flash('info','please login first')
         res.redirect('/login')
+    }
+        
 }
 
 
@@ -15,51 +18,66 @@ app.get('/', (req, res) => {
     res.render('index')
 })
 app.get('/login', (req, res) => {
-    res.render('login')
+    res.render('login', {msgs: req.flash('info')})
 })
 app.post('/login', (req, res) => {
     // res.json(req.body)
     let password = req.body.password
     let username = req.body.username
-    if (!password || !username) 
-        return res.render('login', {message: 'username and password are required'})
+    if (!password || !username) {
+        req.flash('info', 'username and password are required')
+        return res.redirect('/login')
+    }
     User.findOne({username}, (err, user) => {
-        if (err)
-            return res.render('login', {message: 'internal error'})
-        if (!user)
-          return res.render('login', {message: 'username not correct'})
-        if (!bcypt.compareSync(password, user.password))
-            return res.render('login', {message:'password not correct'})
-        req.mySession.user = user
-        delete req.mySession.user.password
-        res.redirect('/')
+        if (err) {
+            req.flash('info', 'internal error')
+            return res.redirect('/login')
+        }
+        if (!user) {
+            req.flash('info', 'username not correct')
+            return res.redirect('/login')
+        }
+        if (!bcypt.compareSync(password, user.password)) {
+            req.flash('info', 'password not correct')
+            return res.redirect('/login')
+        } else {
+            req.session.user = user
+            delete req.session.user.password
+            return res.redirect('/dashboard')
+        }
     })
 })
 app.get('/signup', (req, res) => {
-    res.render('signup')
+    res.render('signup', {msgs: req.flash('info')})
 })
 app.post('/signup', (req, res) => {
     // res.json(req.body)
     let username = req.body.username
     let password = req.body.password
     if (!username || !password) {
-        res.render('signup', {message: 'username and password must be filled'})
+        req.flash('info', 'username and password must be filled')
+        return res.redirect('/signup')
     }
     User.findOne({username: username}, (err, user) => {
-        if (err)
-            res.render('signup', {message: 'internal error'})
-        if (user)
-            res.render('signup', {message: 'user already exist'})
+        if (err) {
+            req.flash('info', 'internal error')
+            return res.redirect('/signup')
+        }
+        if (user) {
+            req.flash('info', 'user already exist')
+            return res.redirect('/signup')
+        }
         else {
             let user = new User()     
             user.password = bcypt.hashSync(password, bcypt.genSaltSync(10))
             user.username = username
             user.save((err) => {
                 if (err) {
-                    res.redirect('/login')
+                    req.flash('info', 'internal error')
+                    return res.redirect('/login')
                 }
-                req.mySession.user = user
-                res.redirect('/')
+                req.session.user = user
+                return res.redirect('/dashboard')
             })
         }
     })  
@@ -69,7 +87,7 @@ app.get('/dashboard', checkUser, (req, res) => {
 })
 
 app.get('/logout', (req, res) => {
-    req.mySession.user = {}
+    req.session.user = {}
     res.redirect('/')
 })
 

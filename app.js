@@ -14,12 +14,12 @@ app.use(addUser)
 
 //add user to req if session user exist
 function addUser(req, res, next) {
-    if (req.mySession.user) {
-        User.findOne({username: req.mySession.user.username}, (err, user) => {
+    if (req.session.user) {
+        User.findOne({username: req.session.user.username}, (err, user) => {
             if(err) 
                 res.redirect('/')
             if (!user) {
-                req.mySession = {}
+                req.session = {}
                 next()
             }
             else {

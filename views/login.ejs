@@ -10,8 +10,10 @@
 <body>
     <div class="container">
         <h1>log in</h1>
-        <% if (locals.message) { %>
-            <h2><%= locals.message %></h2>
+        <% if (locals.msgs) { %>
+            <% msgs.forEach(msg => { %>
+                <h2><%= msg %></h2>
+        <%  }) %>
         <% } %>
         <form action="/login" method="post">
             <label for="">username</label>

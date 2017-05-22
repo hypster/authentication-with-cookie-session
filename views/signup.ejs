@@ -9,8 +9,10 @@
 </head>
 <body>
     <div class="container">
-        <% if (locals.message) { %>
-            <h2><%= locals.message %></h2>
+        <% if (locals.msgs) { %>
+            <% msgs.forEach(msg => { %>
+                <h2><%= msg %></h2>
+            <%})%>
         <% } %>
         <h1>sign up</h1>
         <form action="/signup" method='post'>
